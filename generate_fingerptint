@@ -1,0 +1,41 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Jul 28 03:58:08 2024
+
+@author: horik
+"""
+
+import pandas as pd
+import numpy as np
+from rdkit import Chem
+from rdkit.Chem import AllChem
+from rdkit.Avalon.pyAvalonTools import GetAvalonFP
+
+fingerprint = 'Avalon' #RDKit_fp, ECFP, FCFP, Avalon, MACCs_key
+
+df = pd.read_csv('logSdataset1290.csv',index_col = 0)
+smiles = df['SMILES']
+
+mols = []
+for smile in smiles:
+    mol = Chem.MolFromSmiles(smile)
+    mols.append(mol)
+
+if fingerprint == 'RDKit_fp':
+    fp = [Chem.RDKFingerprint(mol) for mol in mols]
+
+elif fingerprint == 'ECFP':
+    fp = [AllChem.GetMorganFingerprintAsBitVect(mol, 2, 2048) for mol in mols]
+
+elif fingerprint == 'FCFP':
+    fp = [AllChem.GetMorganFingerprintAsBitVect(mol, 2, 2048, useFeatures=True) for mol in mols]
+
+elif fingerprint == 'MACCs_key':
+    fp = [AllChem.GetMACCSKeysFingerprint(mol) for mol in mols]
+
+elif fingerprint == 'Avalon':
+    fp = [GetAvalonFP(mol) for mol in mols]
+
+fp = pd.DataFrame(np.array(fp, int))
+
+fp.to_csv('fingerprint.csv')
